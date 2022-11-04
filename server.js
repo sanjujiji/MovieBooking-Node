@@ -1,14 +1,13 @@
 const express = require('express');
 const app = express();
 const router = express.Router();
-
-
+const bodyParser = require("body-parser");
 
 //Importing all routes
 const movieRoute = require('./routes/movie.routes');
 const genreRoute = require('./routes/genre.routes');
 const artistRoute = require('./routes/artist.routes');
-
+const loginRoute = require('./routes/user.routes');
 //cors module
 const cors = require('cors');
   app.use(cors());
@@ -18,7 +17,7 @@ const cors = require('cors');
       methods: "GET, PUT" // would allow only GET and PUT request
   };
   app.use(cors(corsOptions))
-
+  app.use(bodyParser.json());
 //port for web server 
 const port = 9000;
 
@@ -32,6 +31,7 @@ app.listen(port,() => {
 app.use('/api/',movieRoute);
 app.use('/api/',genreRoute);
 app.use('/api/',artistRoute);
+app.use('/api/',loginRoute);
 
 // const http = require('http');
 // const httpStatus = require('http-status-codes');
