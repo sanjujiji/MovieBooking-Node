@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-const { movies } = require('./index');
-const moviesSchema = require ('./movie.model');
+// const moviesSchema = require ('./movie.model');
 
 const userSchema = mongoose.Schema({
     userid : {

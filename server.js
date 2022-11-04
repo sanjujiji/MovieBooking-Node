@@ -1,10 +1,37 @@
 const express = require('express');
 const app = express();
+const router = express.Router();
+
+
+
+//Importing all routes
+const movieRoute = require('./routes/movie.routes');
+const genreRoute = require('./routes/genre.routes');
+const artistRoute = require('./routes/artist.routes');
+
+//cors module
+const cors = require('cors');
+  app.use(cors());
+  var corsOptions = {
+      origin: 'http://localhost:9000',
+      optionsSuccessStatus: 200, // For legacy browser support
+      methods: "GET, PUT" // would allow only GET and PUT request
+  };
+  app.use(cors(corsOptions))
+
+//port for web server 
 const port = 9000;
 
 app.listen(port,() => {
   console.log(`Web server listening at port ${port}`);
 });
+
+
+
+//Routes
+app.use('/api/',movieRoute);
+app.use('/api/',genreRoute);
+app.use('/api/',artistRoute);
 
 // const http = require('http');
 // const httpStatus = require('http-status-codes');
@@ -38,3 +65,10 @@ dbNew.mongoose.connect(dbNew.db, {
     process.exit();
   });
 
+
+  //Routing
+  app.get("/", (req, res) => {
+    res.json({ message: "Welcome to Upgrad Movie booking application development." });
+  });
+ 
+  module.exports = {express,router}  ;
