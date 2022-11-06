@@ -22,29 +22,46 @@ const findOne = (movieId) => {
 };
 
 //To fetch the details of a movie given the details of status, title, genres, artists, release date and published date
-const findMoviesByDetails = (status,title,genres,artists,releaseDate,publishedDate)=>{
-    
-    if (status === "PUBLISHED"){
-        return movies.find({
-            published : true,
-            title : title,
-            genres: {$all: (genres)} ,
-            "artists.artistid" : {$all : artists},
-            release_date : new Date(releaseDate),
-            publish_date : new Date(publishedDate)
-        })
+let getArtistId = async (artist,q) => {
+    var artistsArr = artist.split(",");
+    const artistIdArr = [];
+    var artistidNew;
+    for (var i = 0; i < artistsArr.length; i++){
+        try{
+            await artists.find({$expr:{$eq:[artistsArr[i], {$concat:["$first_name"," ","$last_name"]}]}},{_id:0,artistid:1},(err,results) =>{
+                artistidNew = results;
+                artistIdArr.push(artistidNew[0].artistid);
+            }).clone();
+            q["$and"].push({"artists.artistid" : artistidNew[0].artistid});
+    } catch(error){
+        console.log(error);
     }
-    else{
-        return movies.find({
-            released : true,
-            title : title,
-            genres: {$all: (genres)} ,
-            "artists.artistid" : {$all : artists},
-            release_date : new Date(releaseDate),
-            publish_date : new Date(publishedDate)
-        })
+}
+};
 
-    }  
+const findMoviesByDetails =  async (status,title,genres,artist,releaseDateStart,releaseDateEnd)=>{
+    var q = {};
+    q['$and'] = [];
+    if (status === 'PUBLISHED')
+        q["$and"].push({published : true});
+    if (status === 'RELEASED')
+        q["$and"].push({released : true});    
+    if (title)
+        q["$and"].push({title : title}); 
+    if (genres){
+        var genresArr = genres.split(",");
+        q["$and"].push({genres: {$all: (genresArr)}});
+    }
+    if (releaseDateStart && releaseDateEnd)
+        q["$and"].push({release_date : {$gte : (releaseDateStart), $lte : (releaseDateEnd)}});
+    if (releaseDateStart && (releaseDateEnd === undefined))    
+        q["$and"].push({release_date : {$gte : (releaseDateStart)}});
+    if ((releaseDateStart===undefined) && (releaseDateEnd))    
+        q["$and"].push({release_date : {$lte : (releaseDateEnd)}});
+    if (artist)  {
+        await getArtistId(artist,q);    
+    }
+        return movies.find(q);
 }
 
 //to fetch details of shows of a specific movie given its id

@@ -10,12 +10,12 @@ router.get('/movies/:movieid',(request,response) =>{
     findOne(movieIdReq)
         .then((document) => {
             if (document.length !== 0){
-            response.status(200).send(document);
-            response.end();
+            return response.status(200).send(document);
+            
             }
             else {
-                response.status(400).send("Movie Not Found");
-                response.end(); 
+            return response.status(400).send("Movie Not Found");
+                
             }
         })
         .catch((err) => {
@@ -27,38 +27,35 @@ router.get('/movies/:movieid',(request,response) =>{
 //get the list of movies based on the movie status
 router.get('/movies',(request,response,next)=>{
     const {status,title,genres,artists,start_date,end_date} = request.query;
-    console.log(status,title,genres,artists,start_date,end_date);
-    
-    if ((request.query.status)&&(title === undefined && genres === undefined && artists === undefined && start_date === undefined && end_date === undefined)){
-        let statusRequired = request.query.status;
-        findAllMoviesbyStatus(statusRequired)
+    if ((status)&&(title === undefined && genres === undefined && artists === undefined && start_date === undefined && end_date === undefined)){
+        findAllMoviesbyStatus(status)
         .then((document) => {
-            response.status(200).send(document);
-            response.end();
+            return response.status(200).send(document);
+            // response.end();
         })
         .catch((err) => {
-            response.status(400).send("List of movies not found");
-            response.end();
+            return response.status(400).send("List of movies not found");
+            // response.end();
         })
     }
 //get the list of movies based on the different criteria
-    else if ((status && title && genres && artists && start_date && end_date
+    else if ((status || title || genres || artists || start_date || end_date
         )){
-        
         findMoviesByDetails(status,
             title,
-            JSON.parse(genres),
-            JSON.parse(artists),
+            genres,
+            artists,
             start_date,
             end_date
             )
         .then((document) => {
-            response.status(200).send(document);
-            response.end();
+            // console.log(document);
+            return response.status(200).send(document);
+            // response.end();
         })
         .catch((err) => {
-            response.status(400).send("List of movies not found");
-            response.end();
+            return response.status(400);
+            // response.end();
         })
     }
     else{
