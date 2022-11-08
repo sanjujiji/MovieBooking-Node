@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 
 
+
 const {signUp,login,logout,getCouponCode,bookShow} = require('../controllers/user.controller');
 //route for signup
 router.post('/auth/signup',(request,response) => {
-    const  {userid,email,firstName,lastName,contact,password} = req.body;
-    signUp(userid,email,firstName,lastName,contact,password)
+    const  email  = request.body.email_address;
+    const firstName = request.body.first_name;
+    const lastName = request.body.last_name;
+    const mobileNumber = request.body.mobile_number;
+    const password = request.body.password;
+    signUp(email,firstName,lastName,mobileNumber,password)
     .then((document) => {
         response.status(200).send(document);
         response.end();
@@ -17,13 +22,22 @@ router.post('/auth/signup',(request,response) => {
     })
 });
 
-router.post('/auth/login',(request,response) => {
-    const  {username,password} = req.body;
-    login(username,password)
+router.post('/auth/login', (request,response) => {
+    var token = request.headers['authorization'].split(/\s+/).pop()||'';
+    var auth = Buffer.from(token, 'base64').toString();    // convert from base64
+    var parts = auth.split(/:/);                          // split on colon
+    var username1 = parts[0];
+    var password1 = parts[1];
+    var messageObj;
+    login(username1,password1)
     .then((document) => {
-        if (document.length > 0){
-            response.status(200).send("Login Successful!");
-            response.end();
+        if (document){
+            var uuid = document.substring(0,document.indexOf(" "));
+            var token = document.substring(document.indexOf(" ")+1);
+            messageObj = {"id" : uuid,
+            "access-token": token};
+            return response.end(JSON.stringify(messageObj));
+            // response.end();
         }
         else {
             response.status(422).send("Login Unsuccessful!");
@@ -37,16 +51,17 @@ router.post('/auth/login',(request,response) => {
 });
 
     router.post('/auth/logout',(request,response) => {
-        const  {userid} = req.body;
-        logout(userid)
+        logout(request.body.uuid)
         .then((document) => {
-            if (document.length > 0){
-                response.status(200).send("Logout Successful!");
-                response.end();
+            if (document){
+                const messageObj = {
+                    message : "Logged Out successfully."
+                }
+                return response.end(JSON.stringify(messageObj));
             }
             else {
-                response.status(422).send("Logout Unsuccessful!");
-                response.end();
+                return response.status(422).json("Logout Unsuccessful!");
+                //response.end();
             }
         })
         .catch((err) => {
@@ -55,30 +70,38 @@ router.post('/auth/login',(request,response) => {
         })
 })
 
-    router.get('/getCouponCode',(request,response) => {
-    getCouponCode(req.params.userid)
-    .then((document) => {
-        response.status(200).send(document);
-        response.end();
-    })
-    .catch((err) =>{
-        response.status(422).send("Unable to process request");
-        response.end();
+    router.get('/auth/coupons',(request,response) => {
+        var token = request.headers['authorization'].split(/\s+/).pop()||'';
+        getCouponCode(token,request.query.code)
+            .then((document) => {
+            return response.end(JSON.stringify(document));
+        })
+        .catch((err) =>{
+            return response.status(422).send("Unable to process request");
     })
 })
 
 //code for updating the show details
-router.post('/bookShow',(request,response) => {
-    const  {userid,referencenumber,couponCode,showid,tickets} = req.body;
-    bookShow(userid,referencenumber,couponCode,showid,tickets)
+router.post('/auth/bookings',(request,response) => {
+    var token = request.headers['authorization'].split(/\s+/).pop()||'';
+    // const  {customerUuid,coupon_code,show_id,tickets} = request.body;
+    const customerUuid = request.body.customerUuid;
+    const coupon = request.body.bookingRequest.coupon_code;
+    const showid = request.body.bookingRequest.show_id;
+    const ticketList = request.body.bookingRequest.tickets;
+
+    console.log (customerUuid,"---",coupon,"---",showid,"---",ticketList);
+    bookShow(customerUuid,token,coupon,showid,ticketList)
     .then((document) => {
-        if (document.length > 0){
-            response.status(200).send("Show details updated successfully!");
-            response.end();
+        if (document){
+            const messageObj = {
+                reference_number : document
+            }
+            return response.end(JSON.stringify(messageObj));
         }
         else {
-            response.status(422).send("Show details update Unsuccessful!");
-            response.end();
+            return response.status(422).send("Show details update Unsuccessful!");
+            // response.end();
         }
     })
     .catch((err) => {

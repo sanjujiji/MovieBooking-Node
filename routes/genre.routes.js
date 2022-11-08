@@ -7,8 +7,10 @@ router.get('/genres',(request,response) => {
     findAllGenres()
     .then((document) => {
         if (document.length !== 0){
-            response.status(200).send(document);
-            response.end();
+            const messageObj = {
+                genres : document
+            }
+            return response.end(JSON.stringify(messageObj));
             }
             else {
                 response.status(400).send("Genres Not Found");

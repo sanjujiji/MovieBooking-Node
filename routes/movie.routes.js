@@ -10,12 +10,10 @@ router.get('/movies/:movieid',(request,response) =>{
     findOne(movieIdReq)
         .then((document) => {
             if (document.length !== 0){
-            return response.status(200).send(document);
-            
+                return response.status(200).send(document);
             }
             else {
-            return response.status(400).send("Movie Not Found");
-                
+                return response.status(400).send("Movie Not Found");
             }
         })
         .catch((err) => {
@@ -30,7 +28,10 @@ router.get('/movies',(request,response,next)=>{
     if ((status)&&(title === undefined && genres === undefined && artists === undefined && start_date === undefined && end_date === undefined)){
         findAllMoviesbyStatus(status)
         .then((document) => {
-            return response.status(200).send(document);
+            const messageObj = {
+                movies : document
+            }
+            return response.end(JSON.stringify(messageObj));
             // response.end();
         })
         .catch((err) => {
@@ -49,8 +50,10 @@ router.get('/movies',(request,response,next)=>{
             end_date
             )
         .then((document) => {
-            // console.log(document);
-            return response.status(200).send(document);
+            const messageObj = {
+                movies : document
+            }
+            return response.end(JSON.stringify(messageObj));
             // response.end();
         })
         .catch((err) => {
@@ -70,15 +73,5 @@ router.get('/movies',(request,response,next)=>{
     })
     }
 })
-
-
-
-
-// app.get('/movies',(request , response) => {
-//     findAllMovies()
-//     .then ((document) => {
-//         console.log(document);
-//     });
-// })
 
 module.exports = router;
